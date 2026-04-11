@@ -1,0 +1,27 @@
+
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  localstack:
+    image: localstack/localstack:latest
+    ports:
+      - "4566:4566"
+    environment:
+      SERVICES: sqs,dynamodb,s3
+      DEFAULT_REGION: eu-west-2
+      DATA_DIR: /tmp/localstack/data
+      LOCALSTACK_ACKNOWLEDGE_ACCOUNT_REQUIREMENT: 1
+      LOCALSTACK_AUTH_TOKEN: ls-PAkeJaPI-7340-hUdA-REza-9119GaTa3eb2
+    volumes:
+      - localstack_data:/var/lib/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./scripts/localstack-init.sh:/etc/localstack/init/ready.d/init.sh
+
+volumes:
+  qdrant_data:
+  localstack_data:

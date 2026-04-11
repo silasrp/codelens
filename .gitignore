@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+cdk.out/
+.cdk.staging/
+frontend/dist/
+
+# Environment — never commit real keys
+.env
+.env.local
+.env.prod
+
+# AWS
+*.tfstate
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
