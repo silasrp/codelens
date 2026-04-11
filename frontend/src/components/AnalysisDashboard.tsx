@@ -5,10 +5,10 @@
  * Uses TanStack Query for automatic polling with exponential backoff.
  */
 
-import { useState } from "react";
+  import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { submitRepository, getJobStatus } from "../api/client";
-import type { JobStatus } from "../api/client";
+import type { JobStatus, JobStatusResponse } from "../api/client";
 
 const PHASE_LABELS: Record<string, string> = {
   queued: "Queued",
@@ -42,20 +42,22 @@ export function AnalysisDashboard({ onComplete }: AnalysisDashboardProps) {
   });
 
   // Poll job status every 2s while active, stop when complete/failed
-  const { data: jobStatus } = useQuery({
+  const { data: jobStatus } = useQuery<JobStatusResponse>({
     queryKey: ["jobStatus", activeJobId],
     queryFn: () => getJobStatus(activeJobId!),
     enabled: !!activeJobId,
-    refetchInterval: (data) => {
-      if (!data || ["complete", "failed"].includes(data.status)) return false;
+    refetchInterval: (query) => {
+      const d = query.state.data;
+      if (!d || ["complete", "failed"].includes(d.status)) return false;
       return 2000;
     },
-    onSuccess: (data) => {
-      if (data.status === "complete") {
-        onComplete(activeJobId!);
-      }
-    },
   });
+
+  useEffect(() => {
+    if (jobStatus?.status === "complete") {
+      onComplete(activeJobId!);
+    }
+  }, [jobStatus?.status, activeJobId, onComplete]);
 
   const isRunning =
     activeJobId &&
