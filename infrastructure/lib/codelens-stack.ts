@@ -26,10 +26,8 @@ export class CodeLensStack extends cdk.Stack {
     const env    = props.environment;
 
     // ── SSM secrets (stored before deploy — never appear in CDK output) ──
-    const openaiKey  = ssm.StringParameter.valueForSecureStringParameter(this, "OpenAIKey",  "/codelens/openai-api-key");
-    const voyageKey  = ssm.StringParameter.valueForSecureStringParameter(this, "VoyageKey",  "/codelens/voyage-api-key");
-    const qdrantUrl  = ssm.StringParameter.valueForStringParameter(      this, "QdrantUrl",  "/codelens/qdrant-url");
-    const qdrantKey  = ssm.StringParameter.valueForSecureStringParameter(this, "QdrantKey",  "/codelens/qdrant-api-key");
+    // Pass parameter paths — the Lambda resolves them at cold start via SSM API.
+    const qdrantUrl  = ssm.StringParameter.valueForStringParameter(this, "/codelens/qdrant-url");
 
     // ── S3 ───────────────────────────────────────────────────────────────
     this.storageBucket = new s3.Bucket(this, "Storage", {
@@ -49,7 +47,7 @@ export class CodeLensStack extends cdk.Stack {
       billingMode:          dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy:        isProd ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
       timeToLiveAttribute:  "expires_at",
-      pointInTimeRecovery:  isProd,
+      pointInTimeRecoverySpecification: isProd ? { pointInTimeRecoveryEnabled: true } : undefined,
     });
 
     this.jobsTable.addGlobalSecondaryIndex({
@@ -74,7 +72,8 @@ export class CodeLensStack extends cdk.Stack {
     // ── Lambda (Docker — tree-sitter needs compiled C extensions) ────────
     this.orchestratorFn = new lambda.DockerImageFunction(this, "Orchestrator", {
       functionName: `codelens-orchestrator-${env}`,
-      code: lambda.DockerImageCode.fromImageAsset("../services/lambda", {
+      code: lambda.DockerImageCode.fromImageAsset("../services", {
+        file: "lambda/Dockerfile",
         platform: ecr_assets.Platform.LINUX_AMD64,
       }),
       memorySize: 2048,
@@ -83,10 +82,10 @@ export class CodeLensStack extends cdk.Stack {
         DYNAMODB_TABLE:  this.jobsTable.tableName,
         S3_BUCKET:       this.storageBucket.bucketName,
         AWS_ACCOUNT:     this.account,
-        OPENAI_API_KEY:  openaiKey,
-        VOYAGE_API_KEY:  voyageKey,
-        QDRANT_URL:      qdrantUrl,
-        QDRANT_API_KEY:  qdrantKey,
+        SSM_OPENAI_API_KEY:  "/codelens/openai-api-key",
+        SSM_VOYAGE_API_KEY:  "/codelens/voyage-api-key",
+        QDRANT_URL:          qdrantUrl,
+        SSM_QDRANT_API_KEY:  "/codelens/qdrant-api-key",
       },
     });
 

@@ -4,10 +4,10 @@ WORKDIR ${LAMBDA_TASK_ROOT}
 
 RUN dnf install -y gcc git && dnf clean all
 
-COPY requirements.txt .
+COPY lambda/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
-COPY ../api/core ./core
+COPY lambda/ .
+COPY api/core ./core
 
 CMD ["handler.handler"]

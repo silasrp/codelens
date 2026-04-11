@@ -18,8 +18,30 @@ logger.setLevel(logging.INFO)
 
 _dynamodb = boto3.resource("dynamodb", region_name=os.environ.get("AWS_DEFAULT_REGION", "eu-west-2"))
 _s3       = boto3.client("s3")
+_ssm      = boto3.client("ssm", region_name=os.environ.get("AWS_DEFAULT_REGION", "eu-west-2"))
 _table    = _dynamodb.Table(os.environ["DYNAMODB_TABLE"])
 _bucket   = os.environ["S3_BUCKET"]
+
+
+def _resolve_ssm_secrets() -> None:
+    """Resolve SSM SecureString parameters into env vars on cold start."""
+    mapping = {
+        "SSM_OPENAI_API_KEY": "OPENAI_API_KEY",
+        "SSM_VOYAGE_API_KEY": "VOYAGE_API_KEY",
+        "SSM_QDRANT_API_KEY": "QDRANT_API_KEY",
+    }
+    names = [os.environ[k] for k in mapping if k in os.environ]
+    if not names:
+        return
+    resp = _ssm.get_parameters(Names=names, WithDecryption=True)
+    by_name = {p["Name"]: p["Value"] for p in resp["Parameters"]}
+    for ssm_key, env_key in mapping.items():
+        param_name = os.environ.get(ssm_key)
+        if param_name and param_name in by_name:
+            os.environ[env_key] = by_name[param_name]
+
+
+_resolve_ssm_secrets()
 
 
 def handler(event: dict, context: Any) -> dict:
