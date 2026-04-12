@@ -6,7 +6,7 @@ CodeLens takes any GitHub repository, parses it with a real AST parser, construc
 
 > Built as a demonstration of non-trivial LLM integration: static analysis, async distributed architecture, semantic chunking, and vector search — all working together in production on AWS.
 
-**Live demo:** [your-url-here]
+**Live demo:** [http://codelens-frontend-017562255303.s3-website.eu-west-2.amazonaws.com/]
 
 ---
 
