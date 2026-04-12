@@ -37,12 +37,22 @@ class SearchHit:
     generated_doc: str
 
 
+def _clean(value: str) -> str:
+    """Remove stray newlines that break HTTP headers (e.g. base64-wrapped JWTs)."""
+    return value.replace("\n", "").replace("\r", "").strip()
+
+
 class ChunkEmbedder:
-    def __init__(self) -> None:
-        self._voyage = voyageai.Client(api_key=os.environ["VOYAGE_API_KEY"])
+    def __init__(self, *, voyage_api_key: str | None = None,
+                 qdrant_url: str | None = None,
+                 qdrant_api_key: str | None = None) -> None:
+        self._voyage = voyageai.Client(
+            api_key=_clean(voyage_api_key or os.environ["VOYAGE_API_KEY"]),
+        )
+        _api_key = _clean(qdrant_api_key or os.environ.get("QDRANT_API_KEY") or "") or None
         self._qdrant = QdrantClient(
-            url=os.environ.get("QDRANT_URL", "http://localhost:6333"),
-            api_key=os.environ.get("QDRANT_API_KEY") or None,
+            url=_clean(qdrant_url or os.environ.get("QDRANT_URL", "http://localhost:6333")),
+            api_key=_api_key,
         )
 
     def upsert_chunks(self, job_id: str, chunks: list[Chunk],
@@ -95,11 +105,16 @@ class ChunkEmbedder:
 
 
 class SemanticSearchEngine:
-    def __init__(self) -> None:
-        self._voyage = voyageai.Client(api_key=os.environ["VOYAGE_API_KEY"])
+    def __init__(self, *, voyage_api_key: str | None = None,
+                 qdrant_url: str | None = None,
+                 qdrant_api_key: str | None = None) -> None:
+        self._voyage = voyageai.Client(
+            api_key=_clean(voyage_api_key or os.environ["VOYAGE_API_KEY"]),
+        )
+        _api_key = _clean(qdrant_api_key or os.environ.get("QDRANT_API_KEY") or "") or None
         self._qdrant = QdrantClient(
-            url=os.environ.get("QDRANT_URL", "http://localhost:6333"),
-            api_key=os.environ.get("QDRANT_API_KEY") or None,
+            url=_clean(qdrant_url or os.environ.get("QDRANT_URL", "http://localhost:6333")),
+            api_key=_api_key,
         )
 
     def search(self, job_id: str, query: str,

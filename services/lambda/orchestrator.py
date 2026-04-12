@@ -221,16 +221,13 @@ class AnalysisOrchestrator:
     def embed_and_index(self) -> None:
         if not self._chunk_plan:
             return
-        try:
-            from services.embedder import ChunkEmbedder
-            ChunkEmbedder().upsert_chunks(
-                job_id=self.job_id,
-                chunks=self._chunk_plan.chunks,
-                pass_one_docs=self._pass_one_results,
-            )
-            logger.info("[%s] Embedded %d chunks", self.job_id, len(self._chunk_plan.chunks))
-        except Exception as exc:
-            logger.warning("Embedding failed (non-fatal): %s", exc)
+        from services.embedder import ChunkEmbedder
+        ChunkEmbedder().upsert_chunks(
+            job_id=self.job_id,
+            chunks=self._chunk_plan.chunks,
+            pass_one_docs=self._pass_one_results,
+        )
+        logger.info("[%s] Embedded %d chunks", self.job_id, len(self._chunk_plan.chunks))
 
     # ── Finalise ────────────────────────────────────────────────────────────
 

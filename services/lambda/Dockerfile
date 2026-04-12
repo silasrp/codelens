@@ -9,5 +9,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY lambda/ .
 COPY api/core ./core
+COPY api/services ./services
 
 CMD ["handler.handler"]
