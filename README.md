@@ -25,31 +25,8 @@ Most LLM + code projects send a file to an API and ask for a summary. CodeLens d
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────┐
-│  React + Vite  ·  S3 static hosting     │
-└──────────────────┬──────────────────────┘
-                   │ REST
-┌──────────────────▼──────────────────────┐
-│  FastAPI  ·  EC2 instance               │
-└──────────────────┬──────────────────────┘
-                   │ SQS enqueue
-┌─── AWS Cloud ────▼──────────────────────────────────────┐
-│                                                          │
-│  SQS ──────► Lambda orchestrator ──────► DynamoDB        │
-│  job queue     (Docker image)             job state       │
-│                     │                                    │
-│              ┌──────▼───────────────────────────┐        │
-│              │  Analysis pipeline               │        │
-│              │  tree-sitter · chunker · NetworkX│        │
-│              └──────────────────────────────────┘        │
-└──────────────────────────────────────────────────────────┘
-                     │
-          ┌──────────┼──────────┐
-          ▼          ▼          ▼
-       GPT-4o    Voyage AI   Qdrant Cloud
-   multi-pass   embeddings   vector search
-```
+<img width="1378" height="1116" alt="image" src="https://github.com/user-attachments/assets/c51848e8-3677-4e7a-9cd4-30e0d567d864" />
+
 
 ---
 
